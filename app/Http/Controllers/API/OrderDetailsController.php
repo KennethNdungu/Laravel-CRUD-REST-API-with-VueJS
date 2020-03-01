@@ -4,6 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\OrderDetail;
+use App\Http\Resources\OrderDetailResource;
+use App\Http\Resources\OrderDetailResourceCollection;
 
 class OrderDetailsController extends Controller
 {
@@ -12,9 +15,10 @@ class OrderDetailsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index():OrderDetailResourceCollection
     {
-        //
+
+        return new OrderDetailResourceCollection(OrderDetail::paginate());
     }
 
     /**
@@ -35,7 +39,17 @@ class OrderDetailsController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        //validate order detail data entry
+        $request->validate([
+            'order_id'=>'required|string',
+            'product_id'=>'required|string'
+        ]);
+
+        //create new order detail
+        $orderdetail=OrderDetail::create($request->all());
+        $accessToken=$orderdetail->createToken('authToken')->accessToken;
+
+        return new OrderDetailResource($orderdetail,$accessToken);
     }
 
     /**
@@ -44,9 +58,10 @@ class OrderDetailsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(OrderDetail $orderdetail):OrderDetailResource
     {
-        //
+        //puts order detail into an array through the OrderDetailResource.
+        return new OrderDetailResource($orderdetail);
     }
 
     /**
@@ -67,9 +82,13 @@ class OrderDetailsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(OrderDetail $orderdetail, Request $request):OrderDetailResource
     {
-        //
+        //update order detail
+        $orderdetail->update($request->all());
+
+        return new OrderDetailResource($orderdetail);
+
     }
 
     /**
@@ -78,8 +97,10 @@ class OrderDetailsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(OrderDetail $orderdetail)
     {
-        //
+        $orderdetail->delete();
+
+        return response()->json();
     }
 }

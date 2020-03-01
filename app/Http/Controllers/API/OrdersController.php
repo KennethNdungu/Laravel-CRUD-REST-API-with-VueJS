@@ -45,8 +45,9 @@ class OrdersController extends Controller
 
     //create new product
     $order=Order::create($request->all());
+    $accessToken=$order->createToken('authToken')->accessToken;
 
-    return new OrderResource($order);
+    return new OrderResource($order,$accessToken);
     }
 
     /**

@@ -50,7 +50,10 @@ class ProductsController extends Controller
         //create new product
         $product=Product::create($request->all());
 
-        return new ProductResource($product);
+        $accessToken=$product->createToken('authToken')->accessToken;
+
+
+        return new ProductResource($product,$accessToken);
     }
 
     /**

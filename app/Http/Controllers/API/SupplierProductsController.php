@@ -4,6 +4,9 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\SupplierProduct;
+use App\Http\Resources\SupplierProductResource;
+use App\Http\Resources\SupplierProductResourceCollection;
 
 class SupplierProductsController extends Controller
 {
@@ -12,9 +15,10 @@ class SupplierProductsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index():SupplierProductResourceCollection
     {
-        //
+
+        return new SupplierProductResourceCollection(SupplierProduct::paginate());
     }
 
     /**
@@ -35,7 +39,19 @@ class SupplierProductsController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        //validate supplier product data entry
+        $request->validate([
+            'supply_id'=>'required|string',
+            'product_id'=>'required|string'
+        ]);
+
+        //create new supplier product
+        $supplierproduct=SupplierProduct::create($request->all());
+
+        $accessToken=$supplierproduct->createToken('authToken')->accessToken;
+
+
+        return new SupplierProductResource($supplierproduct,$accessToken);
     }
 
     /**
@@ -44,9 +60,10 @@ class SupplierProductsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(SupplierProduct $supplierproduct):SupplierProductResource
     {
-        //
+        //puts supplier product into an array through the SupplierProductResource.
+        return new SupplierProductResource($supplierproduct);
     }
 
     /**
@@ -67,9 +84,13 @@ class SupplierProductsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(SupplierProduct $supplierproduct, Request $request):SupplierProductResource
     {
-        //
+        //update supplier product
+        $supplierproduct->update($request->all());
+
+        return new SupplierProductResource($supplierproduct);
+
     }
 
     /**
@@ -78,8 +99,10 @@ class SupplierProductsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(SupplierProduct $supplierproduct)
     {
-        //
+        $supplierproduct->delete();
+
+        return response()->json();
     }
 }

@@ -7,6 +7,7 @@ use Faker\Generator as Faker;
 
 $factory->define(OrderDetail::class, function (Faker $faker) {
     return [
-        //
+        'order_id'=>4,
+        'product_id'=>5
     ];
 });

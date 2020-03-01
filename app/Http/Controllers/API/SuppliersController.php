@@ -85,8 +85,9 @@ class SuppliersController extends Controller
     {
         //update supplier
         $supplier->update($request->all());
+        $accessToken=$supplier->createToken('authToken')->accessToken;
 
-        return new SupplierResource($supplier);
+        return new SupplierResource($supplier,$accessToken);
 
     }
 
