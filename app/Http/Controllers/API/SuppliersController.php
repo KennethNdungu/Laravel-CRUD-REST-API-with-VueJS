@@ -10,97 +10,99 @@ use App\Http\Resources\SupplierResourceCollection;
 
 class SuppliersController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index():SupplierResourceCollection
+    public function index()
     {
-
-        return new SupplierResourceCollection(Supplier::paginate());
+        $suppliers = auth()->user()->suppliers;
+ 
+        return response()->json([
+            'success' => true,
+            'data' => $suppliers
+        ]);
     }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+ 
+    public function show($id)
     {
-        //
+        $supplier = auth()->user()->suppliers()->find($id);
+ 
+        if (!$supplier) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Supplier with id ' . $id . ' not found'
+            ], 400);
+        }
+ 
+        return response()->json([
+            'success' => true,
+            'data' => $supplier->toArray()
+        ], 400);
     }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+ 
     public function store(Request $request)
     {
-        //validate supplier data entry
-        $request->validate([
-            'name'=>'required|string',
-            
+        $this->validate($request, [
+            'name' => 'required'
         ]);
+ 
+        $supplier = new Supplier();
+        $supplier->name = $request->name;
 
-        //create new supplier
-        $supplier=Supplier::create($request->all());
-
-        return new SupplierResource($supplier);
+ 
+        if (auth()->user()->suppliers()->save($supplier))
+            return response()->json([
+                'success' => true,
+                'data' => $supplier->toArray()
+            ]);
+        else
+            return response()->json([
+                'success' => false,
+                'message' => 'Supplier could not be added'
+            ], 500);
     }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Supplier $supplier):SupplierResource
+ 
+    public function update(Request $request, $id)
     {
-        //puts supplier into an array through the ProductResource.
-        return new SupplierResource($supplier);
+        $supplier = auth()->user()->suppliers()->find($id);
+ 
+        if (!$supplier) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Supplier with id ' . $id . ' not found'
+            ], 400);
+        }
+ 
+        $updated = $supplier->fill($request->all())->save();
+ 
+        if ($updated)
+            return response()->json([
+                'success' => true
+            ]);
+        else
+            return response()->json([
+                'success' => false,
+                'message' => 'Supplier could not be updated'
+            ], 500);
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
+ 
+    public function destroy($id)
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Supplier $supplier, Request $request):SupplierResource
-    {
-        //update supplier
-        $supplier->update($request->all());
-        $accessToken=$supplier->createToken('authToken')->accessToken;
-
-        return new SupplierResource($supplier,$accessToken);
-
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Supplier $supplier)
-    {
-        $supplier->delete();
-
-        return response()->json();
+        $supplier = auth()->user()->suppliers()->find($id);
+ 
+        if (!$supplier) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Supplier with id ' . $id . ' not found'
+            ], 400);
+        }
+ 
+        if ($supplier->delete()) {
+            return response()->json([
+                'success' => true
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Supplier could not be deleted'
+            ], 500);
+        }
     }
 }

@@ -11,100 +11,104 @@ use App\Http\Resources\ProductResourceCollection;
 
 class ProductsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return ProductResourceCollection
-     */
-    public function index():ProductResourceCollection
-    {
+   
+        public function index()
+        {
+            $products = auth()->user()->products;
+     
+            return response()->json([
+                'success' => true,
+                'data' => $products
+            ]);
+        }
+     
+        public function show($id)
+        {
+            $product = auth()->user()->products()->find($id);
+     
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product with id ' . $id . ' not found'
+                ], 400);
+            }
+     
+            return response()->json([
+                'success' => true,
+                'data' => $product->toArray()
+            ], 400);
+        }
+     
+        public function store(Request $request)
+        {
+            $this->validate($request, [
+                'name' => 'required',
+                'description' => 'required',
+                'quantity' => 'required'
+            ]);
+     
+            $product = new Product();
+            $product->name = $request->name;
+            $product->description = $request->description;
+            $product->quantity = $request->quantity;
 
-        return new ProductResourceCollection(Product::paginate());
+     
+            if (auth()->user()->products()->save($product))
+                return response()->json([
+                    'success' => true,
+                    'data' => $product->toArray()
+                ]);
+            else
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product could not be added'
+                ], 500);
+        }
+     
+        public function update(Request $request, $id)
+        {
+            $product = auth()->user()->products()->find($id);
+     
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product with id ' . $id . ' not found'
+                ], 400);
+            }
+     
+            $updated = $product->fill($request->all())->save();
+     
+            if ($updated)
+                return response()->json([
+                    'success' => true
+                ]);
+            else
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product could not be updated'
+                ], 500);
+        }
+     
+        public function destroy($id)
+        {
+            $product = auth()->user()->products()->find($id);
+     
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product with id ' . $id . ' not found'
+                ], 400);
+            }
+     
+            if ($product->delete()) {
+                return response()->json([
+                    'success' => true
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product could not be deleted'
+                ], 500);
+            }
+        }
     }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //validate product data entry
-        $request->validate([
-            'name'=>'required|string',
-            'description'=>'required|string',
-            'quantity'=>'required|string',
-        ]);
-
-        //create new product
-        $product=Product::create($request->all());
-
-        $accessToken=$product->createToken('authToken')->accessToken;
-
-
-        return new ProductResource($product,$accessToken);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Product $product):ProductResource
-    {
-        //puts product into an array through the ProductResource.
-        return new ProductResource($product);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Product $product, Request $request):ProductResource
-    {
-        //update product
-        $product->update($request->all());
-
-        return new ProductResource($product);
-
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Product $product)
-    {
-        $product->delete();
-
-        return response()->json();
-    }
-}

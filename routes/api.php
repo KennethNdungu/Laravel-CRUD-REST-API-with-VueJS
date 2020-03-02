@@ -14,17 +14,25 @@ use App\Product;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+// Route::middleware('auth:api')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
+
+
+
+
+Route::post('register','API\AuthController@register');
+Route::post('login','API\AuthController@login');
+
+Route::middleware('auth:api')->group(function () {
+
+Route::get('user','API\AuthController@details');
+
+Route::apiResource('products','API\ProductsController');
+Route::apiResource('orders','API\OrdersController');
+Route::apiResource('suppliers','API\SuppliersController');
 });
 
-
-Route::apiResource('/products','API\ProductsController');
-Route::apiResource('/orders','API\OrdersController');
-Route::apiResource('/suppliers','API\SuppliersController');
-
-Route::post('/register','API\AuthController@register');
-Route::post('/login','API\AuthController@login');
 
 
 

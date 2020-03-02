@@ -21,7 +21,7 @@ class AuthController extends Controller
 
         $accessToken=$user->createToken('authToken')->accessToken;
 
-        return response(['user'=>$user,'access_token'=>$accessToken]);
+        return response()->json(['user'=>$user,'access_token'=>$accessToken],200);
     }
 
     public function login(Request $request){
@@ -31,12 +31,22 @@ class AuthController extends Controller
         ]);
 
         if(!auth()->attempt($loginData)){
-            return response(['message'=>'Invalid credentials!']);
+            return response()->json(['message'=>'Invalid credentials!'],401);
         }
 
         $accessToken=auth()->user()->createToken('authToken')->accessToken;
-        return response(['user'=>auth()->user(),'access_token'=>$accessToken]);
+        return response()->json(['user'=>auth()->user(),'access_token'=>$accessToken],200);
 
 
+    }
+
+    /**
+     * Returns Authenticated User Details
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function details()
+    {
+        return response()->json(['user' => auth()->user()], 200);
     }
 }
