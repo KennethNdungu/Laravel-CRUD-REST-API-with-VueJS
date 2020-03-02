@@ -10,97 +10,101 @@ use App\Http\Resources\OrderDetailResourceCollection;
 
 class OrderDetailsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index():OrderDetailResourceCollection
-    {
+    public function index()
+        {
+            $orderdetails = auth()->user()->orderdetails;
+     
+            return response()->json([
+                'success' => true,
+                'data' => $orderdetails
+            ]);
+        }
+     
+        public function show($id)
+        {
+            $orderdetail = auth()->user()->orderdetails()->find($id);
+     
+            if (!$orderdetail) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order details with id ' . $id . ' not found'
+                ], 400);
+            }
+     
+            return response()->json([
+                'success' => true,
+                'data' => $orderdetail->toArray()
+            ], 400);
+        }
+     
+        public function store(Request $request)
+        {
+            $this->validate($request, [
+                'order_id' => 'required',
+                'product_id' => 'required'
+            ]);
+     
+            $orderdetail = new OrderDetail();
+            $orderdetail->order_id = $request->order_id;
+            $orderdetail->product_id = $request->product_id;
 
-        return new OrderDetailResourceCollection(OrderDetail::paginate());
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //validate order detail data entry
-        $request->validate([
-            'order_id'=>'required|string',
-            'product_id'=>'required|string'
-        ]);
-
-        //create new order detail
-        $orderdetail=OrderDetail::create($request->all());
-        $accessToken=$orderdetail->createToken('authToken')->accessToken;
-
-        return new OrderDetailResource($orderdetail,$accessToken);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show(OrderDetail $orderdetail):OrderDetailResource
-    {
-        //puts order detail into an array through the OrderDetailResource.
-        return new OrderDetailResource($orderdetail);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(OrderDetail $orderdetail, Request $request):OrderDetailResource
-    {
-        //update order detail
-        $orderdetail->update($request->all());
-
-        return new OrderDetailResource($orderdetail);
-
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(OrderDetail $orderdetail)
-    {
-        $orderdetail->delete();
-
-        return response()->json();
-    }
+     
+            if (auth()->user()->orderdetails()->save($orderdetail))
+                return response()->json([
+                    'success' => true,
+                    'data' => $orderdetail->toArray()
+                ]);
+            else
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order detail could not be added'
+                ], 500);
+        }
+     
+        public function update(Request $request, $id)
+        {
+            $orderdetail = auth()->user()->orderdetails()->find($id);
+     
+            if (!$orderdetail) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order detail with id ' . $id . ' not found'
+                ], 400);
+            }
+     
+            $updated = $orderdetail->fill($request->all())->save();
+     
+            if ($updated)
+                return response()->json([
+                    'success' => true
+                ]);
+            else
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order detail could not be updated'
+                ], 500);
+        }
+     
+        public function destroy($id)
+        {
+            $orderdetail = auth()->user()->orderdetails()->find($id);
+     
+            if (!$orderdetail) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order detail with id ' . $id . ' not found'
+                ], 400);
+            }
+     
+            if ($orderdetail->delete()) {
+                return response()->json([
+                    'success' => true
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Order detail could not be deleted'
+                ], 500);
+            }
+        }
 }

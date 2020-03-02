@@ -30,7 +30,10 @@ Route::get('user','API\AuthController@details');
 
 Route::apiResource('products','API\ProductsController');
 Route::apiResource('orders','API\OrdersController');
+Route::apiResource('orderdetails','API\OrderDetailsController');
 Route::apiResource('suppliers','API\SuppliersController');
+Route::apiResource('supplierproducts','API\SupplierProductsController');
+
 });
 
 
